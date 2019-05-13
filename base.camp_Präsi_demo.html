@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset='utf-8'>
+		<!--Bootstrap imports-->
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+		<!--Vue.js import-->
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		<!--Chart.js import-->
+		<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+		<script>
+			window.addEventListener('load', function(){
+
+				//Vue component for button counters
+                Vue.component('button-counter', {
+					//attribute, which holds 'fruit type'
+                    props: ['fruit'],
+                    data: function () {
+                        return {
+							//counter for amount for fruits
+							count: 0
+						}
+                    },
+					//HTML for the button counter, which includes an onclick count update
+                    template: '<div><button style="height:50px;width:200px" v-on:click="count++">Mehr {{fruit}}!</button><p><b>Anzahl {{fruit}}: {{count}}</b></p></div>',
+                    watch: {
+                        count: function() {
+							//emit the count and the fruit type, when the count is changed
+                            this.$emit('new-data', {count:this.count, fruit:this.fruit});
+                        },
+                       
+                    }
+                })  
+
+				//Vue.js element
+				const vue = new Vue({
+					el: "#test",
+					data: function(){
+						return{
+							//current selected input option
+							select: '',
+							//available input options
+							selectOptions:[
+								{
+									type: 'button', text:'Buttons'
+								},
+								{
+									type: 'counter', text: 'Counter'
+								}
+							],
+							//fruit text decription and their count (for the counter input)
+							fruits: [
+								{count: 0, text: "Äpfel"},
+								{count: 0, text: "Bananen"},
+								{count: 0, text: "Erdbeeren"}
+							]
+
+							//(Alternative)
+							//counts: {
+							//	apple: 0,
+							//	banana: 0,
+							//	strawb: 0
+							//}
+								
+
+
+						}
+					},
+					methods:{
+						//Update the charts, if button counters changed
+                        buttonUpdate: function(e){
+                            switch(e.fruit)
+                            {
+                                case "Äpfel":
+                                    barChart.data.datasets[0].data[0]=e.count
+                                    break
+                                case "Bananen":
+                                    barChart.data.datasets[1].data[0]=e.count
+                                    break
+                                case "Erdbeeren":
+                                    barChart.data.datasets[2].data[0]=e.count
+                                    break
+                            }
+                            barChart.update()
+                        },
+						//Update the charts, if the counters changed
+						counterUpdate: function(){
+
+							for(i = 0; i < this.fruits.length; i++)	
+							{
+								barChart.data.datasets[i].data[0]=this.fruits[i].count
+							}
+							//barChart.data.datasets[0].data[0]=this.counts.apple       
+							//barChart.data.datasets[1].data[0]=this.counts.banana
+							//barChart.data.datasets[2].data[0]=this.counts.strawb
+       
+                            barChart.update()
+                        },
+
+						//reset the chart and count values, when input value is changed
+						reset: function(){
+
+							for(i = 0; i < this.fruits.length; i++)	
+							{
+								barChart.data.datasets[i].data[0]=0
+								this.fruits[i].count = 0
+
+							}
+
+							/**
+							barChart.data.datasets[0].data[0]= 0     
+							barChart.data.datasets[1].data[0]= 0
+							barChart.data.datasets[2].data[0]= 0
+							barChart.update()
+
+							this.counts.apple = 0
+							this.counts.banana = 0
+							this.counts.strawb = 0
+							*/
+							barChart.update()
+						}
+					}
+
+				})
+
+
+				//Bar chart - shows number of fruits
+				var ctx = document.getElementById('chart').getContext('2d');
+				var barChart = new Chart(ctx, {
+				// The type of chart we want to create
+				type: 'bar',
+
+				// The data for our dataset
+				data: {
+					labels: ['Anzahl'],
+					datasets: [
+						{
+							label: 'Äpfel',
+							backgroundColor: 'rgb(0, 255, 0)',
+							borderColor: 'rgb(124, 124, 124)',
+							borderWidth: '1',
+							data: [0]
+
+						}, 
+                        {
+							label: 'Bananen',
+							backgroundColor: 'rgb(255, 255, 0)',
+							borderColor: 'rgb(124, 124, 124)',
+							borderWidth: '1',
+							data: [0]
+
+						}, 
+                        {
+							label: 'Erdbeeren',
+							backgroundColor: 'rgb(255, 0, 0)',
+							borderColor: 'rgb(124, 124, 124)',
+							borderWidth: '1',
+							data: [0]
+
+						}, 
+                        ]
+				},
+
+				// Configuration options
+				options: {
+					scales: {
+						yAxes: [{
+							ticks:{
+								beginAtZero: true
+							}
+						}]
+					}
+				}
+				});
+				
+			})
+		</script>
+	</head>
+	<!--CSS Styling-->
+	<style>
+		.main{
+			text-align: center
+		}
+		.chart{
+			border: 1px solid rgb(0, 0, 0);
+            border-radius: 10px;
+		}
+
+	</style>
+	<body>
+		<div class="container main" id=test>
+			<div class="row">
+				<div class="col-sm-12">
+					<h1>Vue.js & Chart.js Example</h1>
+					<p><h2>Eingabemethode:</h2></p>
+					<select v-model="select" @change="reset()">
+						<option v-for="option in selectOptions" :value="option.type">{{option.text}}</option>
+					</select>
+				</div>
+			</div>
+			<div class="row">
+				
+			</div>
+			<div class="row mt-3" v-if="select === 'button'">
+					<div class="col-sm-4">
+						<button-counter @new-data="buttonUpdate($event)" fruit="Äpfel"></button-counter>
+					</div>
+					<div class="col-sm-4">
+						<button-counter @new-data="buttonUpdate($event)" fruit="Bananen"></button-counter>
+					</div>
+					<div class="col-sm-4">
+						<button-counter @new-data="buttonUpdate($event)" fruit="Erdbeeren"></button-counter>
+					</div>
+			</div>
+			<div class="row mt-3" v-else-if="select === 'counter'">
+				<div class="col-sm-4" v-for="fruit in fruits">
+					<label>
+						<b>Anzahl {{fruit.text}}:</b>
+						<input v-model.number="fruit.count" type=number @input="counterUpdate()">
+					</label>
+				</div>
+				<!--
+					v-for replaces:
+					<div class="col-sm-4">
+							<label>
+								<b>Anzahl Äpfel:</b>
+								<input v-model.number="counts.apple" type=number @input="counterUpdate()">
+							</label>
+						</div>
+						<div class="col-sm-4">
+							<label>
+								<b>Anzahl Bananen:</b>
+								<input v-model.number="counts.banana" type=number @input="counterUpdate()">
+							</label>
+						</div>
+						<div class="col-sm-4">
+							<label>
+								<b>Anzahl Erdbeeren:</b>
+								<input v-model.number="counts.strawb" type=number @input="counterUpdate()">
+							</label>
+						</div>
+				-->
+						
+			</div>	
+			<div class="row mt-3">
+				<div class="col-sm-12">
+					<div class="chart">
+						<canvas id="chart"></canvas>
+					</div>
+				</div>
+			</div>
+		</div>
+			
+		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+	</body>
+</html>
